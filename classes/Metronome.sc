@@ -1,15 +1,14 @@
 // Adapted from Metronome.sc found here: http://delysid.org/music/sc.html
 
 // Todo:
-//	- Find out why a warning is given when restarting the Pbind.
 //	- Allow bpm to be mapped to a midi control.
-//	- Allow num to be passed as a Pseq for compound time signatures.
+//	- Allow num to be passed as a Pseq or array for compound time signatures.
 //	- Centralise the bpm limits.
 //	- Add GUI controls for changing time signature.
 
 Metronome {
 	// Metronome data.
-	var <num,<denom,<bpm,<out,<isPlaying,clk,pattern;
+	var <num,<denom,<bpm,<out,<isPlaying,clock,pattern;
 	// GUI data.
 	var tempoSpec,win,bStart,bClose,timeSigDisplay,tempoSlider,tempoDisplay;
 	
@@ -36,7 +35,8 @@ Metronome {
 		if ( bpm < 10,  { bpm = 10  } );
 		if ( bpm > 300, { bpm = 300 } );
 		
-		clk = TempoClock(bpm/60);
+		isPlaying = false;
+		clock = TempoClock(bpm/60);
 		this.setUpPattern;
 	}
 	
@@ -53,7 +53,7 @@ Metronome {
 
 		pattern.stop;
 		num = newVal;
-		this.setUpPattern;
+		//this.setUpPattern;
 		if(isPlaying) { this.play };
 		
 		this.updateGUI;
@@ -64,7 +64,7 @@ Metronome {
 
 		pattern.stop;
 		denom = newVal;
-		this.setUpPattern;
+		//this.setUpPattern;
 		if (isPlaying) {this.play};
 
 		this.updateGUI;
@@ -78,13 +78,24 @@ Metronome {
 		if ( bpm < 10 , { bpm = 10  } );
 		if ( bpm > 300, { bpm = 300 } );
 		
-		clk.tempo = bpm/60;
+		clock.tempo = bpm/60;
 		
 		this.updateGUI;
 	}
 	
+	out_ {
+		arg newVal;
+		
+		pattern.stop;
+		out = newVal;
+		this.setUpPattern;
+		if (isPlaying) {this.play};
+	}
+	
 	play {
-		pattern=pattern.play(clock:clk, quant: 1/denom);
+		if (isPlaying) {this.stop};
+		this.setUpPattern;
+		pattern=pattern.play(clock:clock, quant: 1/denom);
 		isPlaying = true;
 
 		this.updateGUI;
@@ -93,13 +104,13 @@ Metronome {
 	stop {
 		pattern.stop;
 		isPlaying = false;
-
+		
 		this.updateGUI;
 	}
 	
 	showGUI {
-		win = SCWindow("Metronome", Rect(100, 100, 400, 120)).front;
-		bStart = SCButton(win, Rect(150, 20, 100, 20))
+		win = Window("Metronome", Rect(100, 100, 400, 120)).front;
+		bStart = Button(win, Rect(150, 20, 100, 20))
 			.states_(
 				[
 					["Start", Color.black, Color.white],
@@ -122,7 +133,7 @@ Metronome {
 				}
 			);
 		
-		bClose = SCButton(win, Rect(150, 40, 100, 20))
+		bClose = Button(win, Rect(150, 40, 100, 20))
 			.states_(
 				[
 					["Close", Color.black, Color.white]
@@ -135,22 +146,22 @@ Metronome {
 				}
 			);
 		
-		tempoDisplay = SCStaticText(win, Rect(100, 60, 200, 20));
+		tempoDisplay = StaticText(win, Rect(100, 60, 200, 20));
 		tempoDisplay.align = \center;
 		
 		tempoSpec = ControlSpec(10, 300, \lin, 1, bpm, "bpm");
 		
-		tempoSlider = SCSlider(win, Rect(50, 80, 300, 20))
+		tempoSlider = Slider(win, Rect(50, 80, 300, 20))
 			.action_
 			(
 				{
 					arg slider;
-					bpm = tempoSpec.map(slider.value);					clk.tempo = tempoSpec.map(slider.value)/60;
+					bpm = tempoSpec.map(slider.value);					clock.tempo = tempoSpec.map(slider.value)/60;
 					tempoDisplay.string = "Tempo: " + tempoSpec.map(slider.value) + " bpm";
 				}
 			);
 		
-		timeSigDisplay = SCStaticText(win, Rect(100, 100, 200, 20));
+		timeSigDisplay = StaticText(win, Rect(100, 100, 200, 20));
 		timeSigDisplay.align = \center;
 
 		this.updateGUI;
