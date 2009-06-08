@@ -1,3 +1,4 @@
 This repository contains utility classes for SuperCollider. Put the contents under ~/Library/Application Support/SuperCollider/Extensions/Utilities/
 
-Class-specific documentation to come...
+Class list:
+Metronome.sc
