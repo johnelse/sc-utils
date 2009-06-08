@@ -2,13 +2,13 @@
 
 // Todo:
 //	- Allow bpm to be mapped to a midi control.
-//	- Allow num to be passed as a Pseq or array for compound time signatures.
+//	- Allow num and denom to be passed as a Pseq or array for compound time signatures.
 //	- Centralise the bpm limits.
 //	- Add GUI controls for changing time signature.
 
 Metronome {
 	// Metronome data.
-	var <num,<denom,<bpm,<out,<isPlaying,clock,pattern;
+	var <num,<denom,<bpm,<out,<isPlaying,<clock,pattern;
 	// GUI data.
 	var tempoSpec,win,bStart,bClose,timeSigDisplay,tempoSlider,tempoDisplay;
 	
@@ -53,8 +53,7 @@ Metronome {
 
 		pattern.stop;
 		num = newVal;
-		//this.setUpPattern;
-		if(isPlaying) { this.play };
+		if (isPlaying) { this.play };
 		
 		this.updateGUI;
 	}
@@ -64,7 +63,6 @@ Metronome {
 
 		pattern.stop;
 		denom = newVal;
-		//this.setUpPattern;
 		if (isPlaying) {this.play};
 
 		this.updateGUI;
@@ -95,7 +93,7 @@ Metronome {
 	play {
 		if (isPlaying) {this.stop};
 		this.setUpPattern;
-		pattern=pattern.play(clock:clock, quant: 1/denom);
+		pattern=pattern.play(clock:clock, quant:denom);
 		isPlaying = true;
 
 		this.updateGUI;
