@@ -1,7 +1,6 @@
 TwitterAccount {
 	//
-	// I assume this doesn't work in Windows, due to use of String.unixCmd
-	// Will have to test if it works with Cygwin.
+	// Doesn't work in Windows, due to use of String.unixCmd
 	//
 	// Usage:
 	//
@@ -36,8 +35,7 @@ TwitterAccount {
 	tweet {
 		arg text;
 		
-		command = format("curl -u %:% -d status='%' http://twitter.com/statuses/update.xml",
-			username, password, text);
+		command = format("curl -u %:% -d status='%' http://twitter.com/statuses/update.xml", username, password, text);
 		
 		command.unixCmd;		
 	}

@@ -22,6 +22,8 @@ Metronome {
 	}
 	
 	init {
+		// Create the "click" synth.
+		// Simply white noise passed through a high-pass filter and a percussive envelope.
 		SynthDef(\metronomeClick, {
 			arg out=0, amp=1;
 			
@@ -32,6 +34,7 @@ Metronome {
 			Out.ar(out, output);
 		}).store;
 		
+		// Keep the bpm within limits.
 		if ( bpm < 10,  { bpm = 10  } );
 		if ( bpm > 300, { bpm = 300 } );
 		
@@ -107,58 +110,60 @@ Metronome {
 	}
 	
 	showGUI {
-		win = Window("Metronome", Rect(100, 100, 400, 120)).front;
-		bStart = Button(win, Rect(150, 20, 100, 20))
-			.states_(
-				[
-					["Start", Color.black, Color.white],
-					["Stop", Color.black, Color.red]
-				]
-			)
-			.action_(
-				{
-					arg butt;
+		if ( win == nil, {
+			this.createGUI;
+		},
+		{
+			if ( win.isClosed == true, {
+				this.createGUI;
+			},
+			{
+				// Window is already open, so bring it to the front.
+				win.front;
+			});
+		});
+	}
 	
-					// n.b. value has already changed by the time action is called.
-					if(butt.value == 1,
-						{
-							this.play;
-						},
-						{
-							this.stop;
-						}
-					);
-				}
-			);
-		
-		bClose = Button(win, Rect(150, 40, 100, 20))
-			.states_(
-				[
-					["Close", Color.black, Color.white]
-				]
-			)
-			.action_
-			(
+	createGUI {
+		// Create GUI window.
+		win = Window.new("Metronome", Rect(100, 100, 400, 120)).front;
+		bStart = Button(win, Rect(150, 20, 100, 20))
+			.states_([
+				["Start", Color.black, Color.white],
+				["Stop", Color.black, Color.red]
+			])
+			.action_({
+				arg butt;
+
+				// n.b. value has already changed by the time action is called.
+				if(butt.value == 1, {
+					this.play;
+				},
 				{
-					win.close;
-				}
-			);
-		
+					this.stop;
+				});
+			});
+	
+		bClose = Button(win, Rect(150, 40, 100, 20))
+			.states_([
+				["Close", Color.black, Color.white]
+			])
+			.action_({
+				win.close;
+			});
+	
 		tempoDisplay = StaticText(win, Rect(100, 60, 200, 20));
 		tempoDisplay.align = \center;
-		
+	
 		tempoSpec = ControlSpec(10, 300, \lin, 1, bpm, "bpm");
-		
+	
 		tempoSlider = Slider(win, Rect(50, 80, 300, 20))
-			.action_
-			(
-				{
-					arg slider;
-					bpm = tempoSpec.map(slider.value);					clock.tempo = tempoSpec.map(slider.value)/60;
-					tempoDisplay.string = "Tempo: " + tempoSpec.map(slider.value) + " bpm";
-				}
-			);
-		
+			.action_({
+				arg slider;
+				bpm = tempoSpec.map(slider.value);					clock.tempo = tempoSpec.map(slider.value)/60;
+				tempoDisplay.string = "Tempo: " + tempoSpec.map(slider.value) + " bpm";
+			});
+	
 		timeSigDisplay = StaticText(win, Rect(100, 100, 200, 20));
 		timeSigDisplay.align = \center;
 
@@ -166,11 +171,14 @@ Metronome {
 	}
 	
 	updateGUI {
-		if ( bStart != nil, {
-			if ( isPlaying, { bStart.value = 1 }, { bStart.value = 0 } );
-		} );
-		if ( tempoSlider != nil, { tempoSlider.value = tempoSpec.unmap(bpm) } );
-		if ( tempoDisplay != nil, { tempoDisplay.string = "Tempo: " + bpm + " bpm" } );
-		if ( timeSigDisplay != nil, { timeSigDisplay.string = "Time signature: " + num + ":" + denom } );
+		// Only update the GUI if the window has been created and is open.
+		if ( win != nil, {
+			if ( win.isClosed == false, {
+				if ( isPlaying, { bStart.value = 1 }, { bStart.value = 0 } );
+				tempoSlider.value = tempoSpec.unmap(bpm);
+				tempoDisplay.string = "Tempo: " + bpm + " bpm";
+				timeSigDisplay.string = "Time signature: " + num + ":" + denom;
+			});
+		});
 	}
 }
