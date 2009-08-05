@@ -1,0 +1,5 @@
+This repository contains utility classes for SuperCollider. Put the contents under ~/Library/Application Support/SuperCollider/Extensions/Utilities/
+
+Class list:
+Metronome.sc
+TwitterAccount.sc
