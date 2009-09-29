@@ -9,8 +9,6 @@
 Metronome {
 	// Metronome data.
 	var <num,<denom,<bpm,<out,<isPlaying,<clock,pattern;
-	// GUI data.
-	var tempoSpec,win,bStart,bClose,timeSigDisplay,tempoSlider,tempoDisplay;
 	
 	*initClass {
 		Class.initClassTree(Server);
@@ -57,8 +55,6 @@ Metronome {
 		pattern.stop;
 		num = newVal;
 		if (isPlaying) { this.play };
-		
-		this.updateGUI;
 	}
 	
 	denom_ {
@@ -67,8 +63,6 @@ Metronome {
 		pattern.stop;
 		denom = newVal;
 		if (isPlaying) {this.play};
-
-		this.updateGUI;
 	}
 	
 	bpm_ {
@@ -80,8 +74,6 @@ Metronome {
 		if ( bpm > 300, { bpm = 300 } );
 		
 		clock.tempo = bpm/60;
-		
-		this.updateGUI;
 	}
 	
 	out_ {
@@ -98,38 +90,39 @@ Metronome {
 		this.setUpPattern;
 		pattern=pattern.play(clock:clock, quant:denom);
 		isPlaying = true;
-
-		this.updateGUI;
 	}
 	
 	stop {
 		pattern.stop;
 		isPlaying = false;
-		
-		this.updateGUI;
+	}
+}
+
+MetronomeGUI {
+	var <metronome;
+	// GUI
+	var tempoSpec,win,bStart,bClose,timeSigDisplay,tempoSlider,tempoDisplay;
+	
+	*initClass {
 	}
 	
-	showGUI {
-		if ( win == nil, {
-			this.createGUI;
-		},
-		{
-			if ( win.isClosed == true, {
-				this.createGUI;
-			},
-			{
-				// Window is already open, so bring it to the front.
-				win.front;
-			});
-		});
+	*new {
+		arg num=4,denom=4,bpm=120,out=0;
+		^super.newCopyArgs(num,denom,bpm,out).init;
+	}
+	
+	init {
+		metronome = Metronome.new(4, 4, 120, 0);
+		this.createGUI;
 	}
 	
 	createGUI {
-		// Create GUI window.
 		win = Window.new("Metronome", Rect(100, 100, 400, 120)).front;
+		win.onClose_({metronome.stop});
+		
 		bStart = Button(win, Rect(150, 20, 100, 20))
 			.states_([
-				["Start", Color.black, Color.white],
+				["Start", Color.black, Color.gray],
 				["Stop", Color.black, Color.red]
 			])
 			.action_({
@@ -137,16 +130,16 @@ Metronome {
 
 				// n.b. value has already changed by the time action is called.
 				if(butt.value == 1, {
-					this.play;
+					metronome.play;
 				},
 				{
-					this.stop;
+					metronome.stop;
 				});
 			});
 	
 		bClose = Button(win, Rect(150, 40, 100, 20))
 			.states_([
-				["Close", Color.black, Color.white]
+				["Close", Color.black, Color.gray]
 			])
 			.action_({
 				win.close;
@@ -154,31 +147,18 @@ Metronome {
 	
 		tempoDisplay = StaticText(win, Rect(100, 60, 200, 20));
 		tempoDisplay.align = \center;
+		tempoDisplay.string = "Tempo: " + metronome.bpm + " bpm";
 	
-		tempoSpec = ControlSpec(10, 300, \lin, 1, bpm, "bpm");
+		tempoSpec = ControlSpec(10, 300, \lin, 1, metronome.bpm, "bpm");
 	
 		tempoSlider = Slider(win, Rect(50, 80, 300, 20))
 			.action_({
 				arg slider;
-				bpm = tempoSpec.map(slider.value);					clock.tempo = tempoSpec.map(slider.value)/60;
-				tempoDisplay.string = "Tempo: " + tempoSpec.map(slider.value) + " bpm";
+				metronome.bpm = tempoSpec.map(slider.value);
 			});
+		tempoSlider.value = tempoSpec.unmap(120);
 	
 		timeSigDisplay = StaticText(win, Rect(100, 100, 200, 20));
 		timeSigDisplay.align = \center;
-
-		this.updateGUI;
-	}
-	
-	updateGUI {
-		// Only update the GUI if the window has been created and is open.
-		if ( win != nil, {
-			if ( win.isClosed == false, {
-				if ( isPlaying, { bStart.value = 1 }, { bStart.value = 0 } );
-				tempoSlider.value = tempoSpec.unmap(bpm);
-				tempoDisplay.string = "Tempo: " + bpm + " bpm";
-				timeSigDisplay.string = "Time signature: " + num + ":" + denom;
-			});
-		});
 	}
 }
