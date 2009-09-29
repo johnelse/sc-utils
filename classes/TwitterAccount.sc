@@ -1,14 +1,13 @@
 TwitterAccount {
 	//
-	// Doesn't work in Windows, due to use of String.unixCmd
+	// Doesn't work in Windows.
 	//
 	// Usage:
 	//
 	// t = TwitterAccount(YOURUSERNAME,YOURPASSWORD);
 	// t.tweet("Tweeting from Supercollider");
 	//
-	var <username, <password;
-	var command;
+	var <>username, <>password, <result="";
 	
 	*initClass {
 		Class.initClassTree(String);
@@ -22,21 +21,24 @@ TwitterAccount {
 	init {
 	}
 	
-	username_ {
-		arg newVal;
-		username = newVal;
-	}
-	
-	password_ {
-		arg newVal;
-		username = newVal;
-	}
-	
 	tweet {
 		arg text;
+		var command, pipe, line;
 		
+		// Form shell command.
 		command = format("curl -u %:% -d status='%' http://twitter.com/statuses/update.xml", username, password, text);
-		
-		command.unixCmd;		
+		// Run command.
+		pipe = Pipe.new(command, "r");
+		// Reset result string.
+		result = "";
+		// Store result.
+		//result = pipe.contents; // This doesn't work as readAllString is defined in File instead of UnixFile. Weird?
+		line = pipe.getLine;
+		while ({line.notNil}, {
+			result = result ++ line ++ "\n";
+			line = pipe.getLine;
+		});
+		// Close pipe.
+		pipe.close;
 	}
 }
