@@ -1,3 +1,7 @@
+// WARNING!
+//
+// This doesn't actually work any more, since OAuth is needed.
+
 TwitterAccount {
 	//
 	// Doesn't work in Windows.
